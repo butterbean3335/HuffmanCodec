@@ -1,0 +1,56 @@
+// PASTE THIS INTO THE DECOMPRESSION SECTION OF THE ACTUAL FILE
+
+else {
+        // decompression
+        character_frequencies = (unsigned int*)calloc(sizeof(unsigned int), MAX);
+        unsigned int freq;
+        priority_queue = (Node**)calloc(sizeof(Node*), MAX);
+        int num_c = 0;
+
+        // first 256 unsigned ints worth of data in the file is the character frequencies
+        for (unsigned char c=0; c<256; c++) {
+            fread(&freq, sizeof(unsigned int), 1, inputFile);
+            character_frequencies[n] = freq;
+
+            // fill the priority queue with all characters included in the compressed file
+            if (freq != 0) {
+                priority_queue[num_c] = create_node(c, freq, NULL, NULL);
+                num_c++;
+            }
+        }
+
+        // reallocate to get rid of unnecessarily allocated memory
+        priority_queue = (Node**)realloc(priority_queue, sizeof(Node*) * num_c); 
+
+        // sort priority queue
+        Node* tmp;
+        for (int l=0; l<num_c-1; l++) {
+            for (int m=0; m<num_c-l-1; m++) {
+                // check if this character has a higher frequency than the next
+                if (character_frequencies[priority_queue[m]->character] > character_frequencies[priority_queue[m+1]->character]) {
+                    // swap these two nodes in the priority queue
+                    tmp = priority_queue[m];
+                    priority_queue[m] = priority_queue[m+1];
+                    priority_queue[m+1] = tmp;
+                }
+                // if they are equal or the m+1 node's frequency is less than m node's just leave it
+            }
+        }
+
+        // fill frequency information into the priority_queue's nodes (prob should have just done this before sorting ngl)
+        for (int c=0; c<num_c; c++) {
+            priority_queue[c]->frequency = character_frequencies[priority_queue[c]->character];
+        }
+
+        // construct binary search tree
+        Tree *tree = (Tree*)calloc(sizeof(Node*) * num_c);  // should be same size as priority_queue right?
+        tree->size = 0;
+        //tree->nodes = 
+
+
+
+        // the next byte of data begins the codes
+
+
+
+    }
