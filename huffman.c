@@ -1,3 +1,10 @@
+/*
+Ben Walsh and Max Savage
+Huffman Encoding
+Lab 4
+Embedded Computing
+March 5, 2024
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
