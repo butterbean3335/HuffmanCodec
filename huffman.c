@@ -240,7 +240,7 @@ int main(int argc, char *argv[]) {
         for(i = 0; i < MAX; i++)
             fwrite(&character_frequencies[i], sizeof(unsigned int), 1, outputFile);
 
-        //we have written all frequencies, and traversed to the end of fpt, need to rewind to now do codes
+        //we have written all frequencies, and traversed to the end of inputFile, need to rewind to now do codes
         rewind(inputFile);
 
         //need to traverse to generate codes
