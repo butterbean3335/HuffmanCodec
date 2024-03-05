@@ -261,7 +261,7 @@ int main(int argc, char *argv[]) {
         bool bit;
         int codeLength = 0;
         int bufferLength = 0;
-        int lenthStepper = 0;
+        int lengthStepper = 0;
         while(fread(&C, sizeof(unsigned char), 1, outputFile) > 0){
             //first step is to get the code to reference
             strcpy(generatedCode, character_codes[C].information);
@@ -295,7 +295,7 @@ int main(int argc, char *argv[]) {
         //now done reading from file, need to make sure buffer is empty
         if(bufferLength != 0){   //things were left in the buffer
             //need to shift buffer over however many bits are left over
-            buff = buff << (8-bufferLength);    
+            readInBuffer = readInBuffer << (8-bufferLength);    
             fwrite(&readInBuffer, sizeof(unsigned char), 1, outputFile);
         }
     }
