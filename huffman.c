@@ -163,13 +163,12 @@ int main(int argc, char *argv[]) {
 
     int result = 0;
     int num_c = 0;
+    unsigned char C;
+    character_frequencies = (unsigned int*)calloc(sizeof(unsigned int),MAX);
+    priority_queue = (Node**)calloc(sizeof(Node*), MAX);
+    character_codes = (Code*)calloc(sizeof(Code),MAX);
     if(compress == true){
         //      -> need to find freq of each character
-        unsigned char C;
-        character_frequencies = (unsigned int*)calloc(sizeof(unsigned int),MAX);
-        priority_queue = (Node**)calloc(sizeof(Node*), MAX);
-        character_codes = (Code*)calloc(sizeof(Code),MAX);
-
         //      -> let character_frequencies store the frequencies of each character
         while((result = fread(&C, sizeof(unsigned char),1,inputFile)) > 0)
         {
@@ -180,11 +179,11 @@ int main(int argc, char *argv[]) {
             }
             character_frequencies[C]++;    
         }
-
+    
         //      -> need to make priority queue
         priority_queue = (Node**)realloc(priority_queue, sizeof(Node*)*num_c);   
 
-
+        
         //      -> need to sort priority queue
         int j;
         Node* tmp;
@@ -219,42 +218,44 @@ int main(int argc, char *argv[]) {
         {
             tree->nodes[i] = create_node(priority_queue[i]->character, priority_queue[i]->frequency, NULL, NULL);
         }
+        
         tree->size = num_c;
 
         //      ->convert tree to minHeap, lowest values are to be removed and added together, and put into a node
-        makeMinHeap(tree);
+        //makeMinHeap(tree);
 
         //      ->remove two nodes
         Node *firstFreqToAdd;
         Node *secondFreqToAdd;
         Node *sumNode;
-        while(tree->size > 0)  {    //while items are in the tree
+        while(tree->size > 1)  {    //while items are in the tree
             firstFreqToAdd = remove_min_node(tree); //lowst item should be removed and returned to firstFreqToAdd
             secondFreqToAdd = remove_min_node(tree);   //now lowest two removed, sum them together
             int sumFrequency = firstFreqToAdd->frequency+ secondFreqToAdd->frequency;
             sumNode = create_node(0, sumFrequency, firstFreqToAdd, secondFreqToAdd);
             //second freq should be greater than first freq, therefore right child
-            if(tree->size == 1){
-                //      ->now tree size is 1, need to remove that node, and set it as root_node
-                root_node = remove_min_node(tree);
-                break;
-            }
+            insert_node(tree, sumNode);
         }
-        
+        root_node = remove_min_node(tree);
 
         //output file will be formatted as frequencies first, followed by the codes
         //first step is to write frequencies to output file --> for testing can printf to write to stdout
-        for(i = 0; i < MAX; i++)
+        for(i = 0; i < MAX; i++){
             fwrite(&character_frequencies[i], sizeof(unsigned int), 1, outputFile);
+            //printf("Freq for i = %d (0x%02X): %d\n", i, i, character_frequencies[i]);
+            //if i = 65, i is character A, and the frequency of occurance is stored at character_frequencies[i]
+        }
 
         //we have written all frequencies, and traversed to the end of inputFile, need to rewind to now do codes
         rewind(inputFile);
-
+        
         //need to traverse to generate codes
         char generatedCode[MAX];
-        int position;
+        int position = 0;
+        
+        //seg fault is occuring right here
         generate_codes(root_node, generatedCode, position);         //-> has put codes into character_codes.info
-
+        
         //now need to write codes
         // we have character_codes which is storing the info, being the code, and the bits for each code, or the length
         unsigned char readInBuffer = 0x00;
@@ -262,7 +263,7 @@ int main(int argc, char *argv[]) {
         int codeLength = 0;
         int bufferLength = 0;
         int lengthStepper = 0;
-        while(fread(&C, sizeof(unsigned char), 1, outputFile) > 0){
+        while(fread(&C, sizeof(unsigned char), 1, inputFile) > 0){
             //first step is to get the code to reference
             strcpy(generatedCode, character_codes[C].information);
             codeLength = character_codes[C].bits;
@@ -287,6 +288,7 @@ int main(int argc, char *argv[]) {
                 if(bufferLength >=8){
                     //buffer is full, shouldnt encounter greater than case, but includes all values of bufferLength now
                     fwrite(&readInBuffer, sizeof(unsigned char), 1, outputFile);
+                    printf("Read In buffer is %c character\n", readInBuffer);
                     readInBuffer == 0x00;       //clear the buffer, done reading 
                     bufferLength = 0;           //set bufferLength to 0
                 }
@@ -297,6 +299,7 @@ int main(int argc, char *argv[]) {
             //need to shift buffer over however many bits are left over
             readInBuffer = readInBuffer << (8-bufferLength);    
             fwrite(&readInBuffer, sizeof(unsigned char), 1, outputFile);
+            printf("Read In buffer is %c character\n", readInBuffer);
         }
     }
     else{
