@@ -4,9 +4,9 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#define parent(x) (x-1)/2
-#define left_child(x) x*2+1
-#define right_child(x) x*2+2
+#define left_child(x) (x * 2 + 1)
+#define right_child(x) (x * 2 + 2)
+#define parent(x) ((x - 1) / 2)
 #define MAX 256 
 
 typedef struct node {
@@ -36,13 +36,41 @@ Node* create_node(unsigned char character, unsigned int frequency, Node* left, N
 void insert_node(Tree* tree, Node* node);
 bool is_leaf(Node* node);
 void swap_Nodes(Node **a, Node **b);
+void heapify(Tree* tree, int index);
+void build_heap(Tree* tree);
+Node* remove_min_node(Tree *tree);
 
 void swap_nodes(Node **a, Node **b)
 {
-    Node *tmp;
-    tmp = *a;
+    Node *tmp = *a;
     *a = *b;
     *b = tmp;
+}
+
+void heapify(Tree* tree, int index) {
+    int smallest = index;
+    int left = left_child(index);
+    int right = right_child(index);
+    smallest = (left < tree->size && tree->nodes[left]->frequency < tree->nodes[smallest]->frequency) ? left : smallest;
+    smallest = (right < tree->size && tree->nodes[right]->frequency < tree->nodes[smallest]->frequency) ? right : smallest;
+    if (index != smallest) {
+        swap_nodes(&tree->nodes[smallest], &tree->nodes[index]);
+        heapify(tree, smallest);
+    }
+}
+
+void build_heap(Tree* tree) {
+    int i, n = tree->size;
+    for (i = parent(n); i >= 0; i--)
+        heapify(tree, i);
+}
+
+Node* remove_min_node(Tree *tree) {
+    tree->size--;
+    Node *tmp = tree->nodes[0];
+    tree->nodes[0] = tree->nodes[tree->size - 1];
+    heapify(tree, 0);
+    return tmp;
 }
 
 void generate_codes(Node* current_node, char code[], int position) {
@@ -69,7 +97,6 @@ Node* create_node(unsigned char character, unsigned int frequency, Node* left, N
     new_node->frequency = frequency;
     new_node->left_child = left;
     new_node->right_child = right;
-
     return new_node;
 }
 
@@ -95,7 +122,7 @@ int main(int argc, char *argv[]) {
     int filenameLength;
     //start with input validation
     if (argc != 3 || ((strcmp(argv[1], "compress")) & (strcmp(argv[1], "decompress"))) != 0) {
-        printf("Usage: ./RLE [compress or decompress] [filename]\n");
+        printf("Usage: ./huffman [compress or decompress] [filename]\n");
         return 1;
     }
     //open for read binary
@@ -130,56 +157,55 @@ int main(int argc, char *argv[]) {
     int result = 0;
     int num_c = 0;
     if(compress == true){
-    //      -> need to find freq of each character
+        //      -> need to find freq of each character
+        unsigned char C;
+        character_frequencies = (unsigned int*)calloc(sizeof(unsigned int),MAX);
+        priority_queue = (Node**)calloc(sizeof(Node*), MAX);
+        character_codes = (Code*)calloc(sizeof(Code),MAX);
 
-    unsigned char C;
-    character_frequencies = (unsigned int*)calloc(sizeof(unsigned int),MAX);
-    priority_queue = (Node**)calloc(sizeof(Node*), MAX);
-    character_codes = (Code*)calloc(sizeof(Code),MAX);
-
-    //      -> let c_freq store the frequencies of each character
-    while((result = fread(&C, sizeof(unsigned char),1,outputFile)) > 0)
-    {
-        if(!character_frequencies[C]) 
-        { 
-            priority_queue[num_c] = create_node(C,0,NULL,NULL);
-            num_c++; 
+        //      -> let character_frequencies store the frequencies of each character
+        while((result = fread(&C, sizeof(unsigned char),1,inputFile)) > 0)
+        {
+            if(!character_frequencies[C]) 
+            { 
+                priority_queue[num_c] = create_node(C,0,NULL,NULL);
+                num_c++; 
+            }
+            character_frequencies[C]++;    
         }
-        character_frequencies[C]++;    
-    }
 
-    //      -> need to make priority queue
-    priority_queue = (Node**)realloc(priority_queue, sizeof(Node*)*num_c);   
+        //      -> need to make priority queue
+        priority_queue = (Node**)realloc(priority_queue, sizeof(Node*)*num_c);   
 
 
-    //      -> need to sort priority queue
-    int j;
-    Node* tmp;
-    for(i = 0; i < num_c-1; i++) {
-        for(j = 0; j < num_c-i-1; j++) {
-            if(character_frequencies[priority_queue[j]->character] > character_frequencies[priority_queue[j+1]->character]) {       //if greater swap
-                tmp = priority_queue[j];
-                priority_queue[j] = priority_queue[j+1];
-                priority_queue[j+1] = tmp;
-            } 
-            else if (character_frequencies[priority_queue[j]->character] == character_frequencies[priority_queue[j+1]->character]){
-                if(priority_queue[j]->character > priority_queue[j+1]->character) {     //if greater sqap
+        //      -> need to sort priority queue
+        int j;
+        Node* tmp;
+        for(i = 0; i < num_c-1; i++) {
+            for(j = 0; j < num_c-i-1; j++) {
+                if(character_frequencies[priority_queue[j]->character] > character_frequencies[priority_queue[j+1]->character]) {       //if greater swap
                     tmp = priority_queue[j];
                     priority_queue[j] = priority_queue[j+1];
-                    priority_queue[j+1] = tmp;    
+                    priority_queue[j+1] = tmp;
+                } 
+                else if (character_frequencies[priority_queue[j]->character] == character_frequencies[priority_queue[j+1]->character]){     //character frequencies equal, characters themselves are compared
+                    if(priority_queue[j]->character > priority_queue[j+1]->character) {     //if greater swap
+                        tmp = priority_queue[j];
+                        priority_queue[j] = priority_queue[j+1];
+                        priority_queue[j+1] = tmp;    
+                    }
                 }
             }
         }
-    }
 
-    //      ->assign frequencies into the priority queue
-    for(i = 0; i < num_c; i++) {
-        priority_queue[i]->frequency = character_frequencies[priority_queue[i]->character];
-    }
+        //      ->assign frequencies into the priority queue
+        for(i = 0; i < num_c; i++) {
+            priority_queue[i]->frequency = character_frequencies[priority_queue[i]->character];
+        }
 
 
-    //      -> make the tree
-    Tree *tree = (Tree*)calloc(sizeof(Tree),1);
+        //      -> make the tree
+        Tree *tree = (Tree*)calloc(sizeof(Tree),1);
         tree->size = 0;
         tree->nodes = (Node**)calloc(sizeof(Node*),MAX);
         for(i = 0; i < num_c; i++)
@@ -188,14 +214,45 @@ int main(int argc, char *argv[]) {
         }
         tree->size = num_c;
 
-/*
-    -> need to make heap and grab two lowest frequencies from it to combine into parent nodes / build tree with frequencies joined
-    --> need to make heap building function and heapify function and remove min/lowest order leaf from tree
-    -> write frequencies to output
-    -> traverse tree and write codes
-    -> create codes --> need to make function
-    -> start writing codes  
-*/
+        //      ->convert tree to minHeap, lowest values are to be removed and added together, and put into a node
+        build_heap(tree);
+
+        //      ->remove two nodes
+        Node *firstFreqToAdd;
+        Node *secondFreqToAdd;
+        Node *sumNode;
+        while(tree->size > 1)  {    //while items are in the tree
+            firstFreqToAdd = remove_min_node(tree); //lowst item should be removed and returned to firstFreqToAdd
+            secondFreqToAdd = remove_min_node(tree);   //now lowest two removed, sum them together
+            int sumFrequency = firstFreqToAdd->frequency+ secondFreqToAdd->frequency;
+            sumNode = create_node(0, sumFrequency, firstFreqToAdd, secondFreqToAdd);
+            //second freq should be greater than first freq, therefore right child
+        }
+        
+
+        //      ->now tree size is 1, need to remove that node, and set it as root_node
+        root_node = remove_min_node(tree);
+
+        //output file will be formatted as frequencies first, followed by the codes
+        //first step is to write frequencies to output file --> for testing can printf to write to stdout
+        for(i = 0; i < MAX; i++)
+            fwrite(&character_frequencies[i], sizeof(unsigned int), 1, outputFile);
+
+        //we have written all frequencies, and traversed to the end of fpt, need to rewind to now do codes
+        rewind(inputFile);
+
+
+        //need to traverse to generate codes
+        char generatedCode[MAX];
+        int position;
+        generate_codes(root_node, generatedCode, position);
+
+        //now need to write codes
+
+
+    /*
+        -> start writing codes  
+    */
     }
     else{
         /*  if decompressing
