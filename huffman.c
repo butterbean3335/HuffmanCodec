@@ -37,7 +37,7 @@ void insert_node(Tree* tree, Node* node);
 bool is_leaf(Node* node);
 void swap_Nodes(Node **a, Node **b);
 void heapify(Tree* tree, int index);
-void build_heap(Tree* tree);
+void makeMinHeap(Tree* tree);
 Node* remove_min_node(Tree *tree);
 
 void swap_nodes(Node **a, Node **b)
@@ -59,7 +59,7 @@ void heapify(Tree* tree, int index) {
     }
 }
 
-void build_heap(Tree* tree) {
+void makeMinHeap(Tree* tree) {
     int i, n = tree->size;
     for (i = parent(n); i >= 0; i--)
         heapify(tree, i);
@@ -75,19 +75,19 @@ Node* remove_min_node(Tree *tree) {
 
 void generate_codes(Node* current_node, char code[], int position) {
     if (current_node->left_child) {
-        code[position] = '0';
+        code[position] = '0';                                                   //left traversal is 0
         generate_codes(current_node->left_child, code, position + 1);
     }
 
     if (current_node->right_child) {
-        code[position] = '1';
+        code[position] = '1';                                                   //right traversal is 1
         generate_codes(current_node->right_child, code, position + 1);
     }
 
     if (is_leaf(current_node)) {
         code[position] = '\0';
-        strcpy(character_codes[current_node->character].information, code);
-        character_codes[current_node->character].bits = position;
+        strcpy(character_codes[current_node->character].information, code);     // writes code to information member of character_codes
+        character_codes[current_node->character].bits = position;               //bits are = position because if you end in the third position, say the numbers 101, thats 3 bits
     }
 }
 
@@ -215,23 +215,25 @@ int main(int argc, char *argv[]) {
         tree->size = num_c;
 
         //      ->convert tree to minHeap, lowest values are to be removed and added together, and put into a node
-        build_heap(tree);
+        makeMinHeap(tree);
 
         //      ->remove two nodes
         Node *firstFreqToAdd;
         Node *secondFreqToAdd;
         Node *sumNode;
-        while(tree->size > 1)  {    //while items are in the tree
+        while(tree->size > 0)  {    //while items are in the tree
             firstFreqToAdd = remove_min_node(tree); //lowst item should be removed and returned to firstFreqToAdd
             secondFreqToAdd = remove_min_node(tree);   //now lowest two removed, sum them together
             int sumFrequency = firstFreqToAdd->frequency+ secondFreqToAdd->frequency;
             sumNode = create_node(0, sumFrequency, firstFreqToAdd, secondFreqToAdd);
             //second freq should be greater than first freq, therefore right child
+            if(tree->size == 1){
+                //      ->now tree size is 1, need to remove that node, and set it as root_node
+                root_node = remove_min_node(tree);
+                break;
+            }
         }
         
-
-        //      ->now tree size is 1, need to remove that node, and set it as root_node
-        root_node = remove_min_node(tree);
 
         //output file will be formatted as frequencies first, followed by the codes
         //first step is to write frequencies to output file --> for testing can printf to write to stdout
@@ -241,16 +243,16 @@ int main(int argc, char *argv[]) {
         //we have written all frequencies, and traversed to the end of fpt, need to rewind to now do codes
         rewind(inputFile);
 
-
         //need to traverse to generate codes
         char generatedCode[MAX];
         int position;
-        generate_codes(root_node, generatedCode, position);
+        generate_codes(root_node, generatedCode, position);         //-> has put codes into character_codes.info
 
         //now need to write codes
 
 
     /*
+
         -> start writing codes  
     */
     }
