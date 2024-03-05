@@ -256,12 +256,48 @@ int main(int argc, char *argv[]) {
         generate_codes(root_node, generatedCode, position);         //-> has put codes into character_codes.info
 
         //now need to write codes
-
-
-    /*
-
-        -> start writing codes  
-    */
+        // we have character_codes which is storing the info, being the code, and the bits for each code, or the length
+        unsigned char readInBuffer = 0x00;
+        bool bit;
+        int codeLength = 0;
+        int bufferLength = 0;
+        int lenthStepper = 0;
+        while(fread(&C, sizeof(unsigned char), 1, outputFile) > 0){
+            //first step is to get the code to reference
+            strcpy(generatedCode, character_codes[C].information);
+            codeLength = character_codes[C].bits;
+            //number of bits is equal to length of coded msg
+            while(bufferLength < 8){
+                //8 bits for an ascii character
+                if(lengthStepper >= codeLength){
+                    //we have stepped through the whole code, this code didnt take up 8 bits
+                    lengthStepper = 0;  //set to 0 for next code
+                    break;      //break causes program to go back to fread and gets next character to reference code table
+                }
+                readInBuffer  = readInBuffer << 1;  //shift left 1 to read in next bit of code
+                if(generatedCode[i] == 1)
+                    bit = 1;
+                else
+                    bit = 0;
+                readInBuffer |= bit;        //set the bit in place of buffer, will need to shift now
+                bufferLength++;
+                //we added a bit to buffer, need to increase it's length
+                lengthStepper++;
+                //current step in length needs to be incremented, next bit of code needed
+                if(bufferLength >=8){
+                    //buffer is full, shouldnt encounter greater than case, but includes all values of bufferLength now
+                    fwrite(&readInBuffer, sizeof(unsigned char), 1, outputFile);
+                    readInBuffer == 0x00;       //clear the buffer, done reading 
+                    bufferLength = 0;           //set bufferLength to 0
+                }
+            }
+        }
+        //now done reading from file, need to make sure buffer is empty
+        if(bufferLength != 0){   //things were left in the buffer
+            //need to shift buffer over however many bits are left over
+            buff = buff << (8-bufferLength);    
+            fwrite(&readInBuffer, sizeof(unsigned char), 1, outputFile);
+        }
     }
     else{
         /*  if decompressing
