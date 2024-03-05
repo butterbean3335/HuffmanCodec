@@ -46,6 +46,13 @@ void swap_Nodes(Node **a, Node **b);
 void heapify(Tree* tree, int index);
 void makeMinHeap(Tree* tree);
 Node* remove_min_node(Tree *tree);
+void printBinary(unsigned char byte);
+
+void printBinary(unsigned char byte) {
+    for(int i = 7; i >= 0; i--) {
+        printf("%d", (byte >> i) & 1);
+    }
+}
 
 void swap_nodes(Node **a, Node **b)
 {
@@ -213,7 +220,7 @@ int main(int argc, char *argv[]) {
         //      -> make the tree
         Tree *tree = (Tree*)calloc(sizeof(Tree),1);
         tree->size = 0;
-        tree->nodes = (Node**)calloc(sizeof(Node*),MAX);
+        tree->nodes = (Node**)calloc(sizeof(Node*),MAX);        //max changed from num_c to ignore 0 frequencie and make tree make nodes even for 0 freq
         for(i = 0; i < num_c; i++)
         {
             tree->nodes[i] = create_node(priority_queue[i]->character, priority_queue[i]->frequency, NULL, NULL);
@@ -222,7 +229,7 @@ int main(int argc, char *argv[]) {
         tree->size = num_c;
 
         //      ->convert tree to minHeap, lowest values are to be removed and added together, and put into a node
-        //makeMinHeap(tree);
+        makeMinHeap(tree);
 
         //      ->remove two nodes
         Node *firstFreqToAdd;
@@ -242,7 +249,7 @@ int main(int argc, char *argv[]) {
         //first step is to write frequencies to output file --> for testing can printf to write to stdout
         for(i = 0; i < MAX; i++){
             fwrite(&character_frequencies[i], sizeof(unsigned int), 1, outputFile);
-            //printf("Freq for i = %d (0x%02X): %d\n", i, i, character_frequencies[i]);
+            printf("Freq for i = %d (0x%02X): %d\n", i, i, character_frequencies[i]);
             //if i = 65, i is character A, and the frequency of occurance is stored at character_frequencies[i]
         }
 
@@ -258,7 +265,7 @@ int main(int argc, char *argv[]) {
         
         //now need to write codes
         // we have character_codes which is storing the info, being the code, and the bits for each code, or the length
-        unsigned char readInBuffer = 0x00;
+        unsigned char readInBuffer;
         bool bit;
         int codeLength = 0;
         int bufferLength = 0;
@@ -267,6 +274,7 @@ int main(int argc, char *argv[]) {
             //first step is to get the code to reference
             strcpy(generatedCode, character_codes[C].information);
             codeLength = character_codes[C].bits;
+
             //number of bits is equal to length of coded msg
             while(bufferLength < 8){
                 //8 bits for an ascii character
@@ -276,7 +284,7 @@ int main(int argc, char *argv[]) {
                     break;      //break causes program to go back to fread and gets next character to reference code table
                 }
                 readInBuffer  = readInBuffer << 1;  //shift left 1 to read in next bit of code
-                if(generatedCode[i] == 1)
+                if(generatedCode[lengthStepper] == '1')
                     bit = 1;
                 else
                     bit = 0;
@@ -288,8 +296,8 @@ int main(int argc, char *argv[]) {
                 if(bufferLength >=8){
                     //buffer is full, shouldnt encounter greater than case, but includes all values of bufferLength now
                     fwrite(&readInBuffer, sizeof(unsigned char), 1, outputFile);
-                    printf("Read In buffer is %c character\n", readInBuffer);
-                    readInBuffer == 0x00;       //clear the buffer, done reading 
+                    printf("Read in Buffer at this point %u \n", readInBuffer);
+                    readInBuffer = 0x00;       //clear the buffer, done reading 
                     bufferLength = 0;           //set bufferLength to 0
                 }
             }
@@ -299,7 +307,7 @@ int main(int argc, char *argv[]) {
             //need to shift buffer over however many bits are left over
             readInBuffer = readInBuffer << (8-bufferLength);    
             fwrite(&readInBuffer, sizeof(unsigned char), 1, outputFile);
-            printf("Read In buffer is %c character\n", readInBuffer);
+            printf("Read in Buffer at this point %d \n", readInBuffer);
         }
     }
     else{
