@@ -1,6 +1,6 @@
 // PASTE THIS INTO THE DECOMPRESSION SECTION OF THE ACTUAL FILE
 
-else {
+ else {
         // decompression
         character_frequencies = (unsigned int*)calloc(sizeof(unsigned int), MAX);
         unsigned int freq;
@@ -33,7 +33,14 @@ else {
                     priority_queue[m] = priority_queue[m+1];
                     priority_queue[m+1] = tmp;
                 }
-                // if they are equal or the m+1 node's frequency is less than m node's just leave it
+                
+                // check if this character has a greater ASCII value than the next
+                else if (priority_queue[m]->character > priority_queue[m+1]->character) {
+                    // swap these two nodes in the priority queue
+                    tmp = priority_queue[m];
+                    priority_queue[m] = priority_queue[m+1];
+                    priority_queue[m+1] = tmp;
+                }
             }
         }
 
@@ -43,9 +50,37 @@ else {
         }
 
         // construct binary search tree
-        Tree *tree = (Tree*)calloc(sizeof(Node*) * num_c);  // should be same size as priority_queue right?
+        Tree *tree = (Tree*)calloc(sizeof(Tree), 1);  // should be same size as priority_queue right?
         tree->size = 0;
-        //tree->nodes = 
+        tree->nodes = (Node**)calloc(sizeof(Node*), MAX);
+        for(int c=0; c<num_c; c++)
+        {
+            tree->nodes[c] = create_node(priority_queue[c]->character, priority_queue[c]->frequency, NULL, NULL);
+        }
+        tree->size = num_c;
+
+        // convert tree to minheap to facilitate node combinations
+        makeMinHeap(tree);
+
+        // do node combinations as required by huffman codec
+        Node *lowest;
+        Node *secondLowest;
+        Node *sumNode;
+        int sumFrequency = 0;
+
+        while(tree->size > 0)  { 
+            lowest = remove_min_node(tree); // remove lowest item in the tree
+            secondLowest = remove_min_node(tree);   // remove second lowest item in the tree
+            sumFrequency = lowest->frequency + secondLowest->frequency;
+            sumNode = create_node(0, sumFrequency, lowest, secondLowest);
+
+            // if only one more node in the tree, that node is the root_node
+            if(tree->size == 1){
+                root_node = remove_min_node(tree);
+            }
+        }
+
+        
 
 
 
@@ -53,4 +88,5 @@ else {
 
 
 
+        
     }
