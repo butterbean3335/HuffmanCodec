@@ -411,6 +411,7 @@ int main(int argc, char *argv[]) {
         unsigned char readIn;
         unsigned char buffer;
         bool bit;
+        int completed_codes = 1;
         int lengthStepper = 7;
         int bufferLength = 0;
         Node *rover = root_node;
@@ -428,7 +429,7 @@ int main(int argc, char *argv[]) {
                 // check if rover has any children, if it does, still more bits in code
                 if (rover->right_child == NULL && rover->left_child == NULL) {
                         // rover does not have any children, this is the character we want to print
-                        printf("!");
+                        printf("# codes completed: %d\n", completed_codes++);
                         printf("printing char %c\n", rover->character);
                         fwrite(&(rover->character), sizeof(unsigned char), 1, outputFile);
 
@@ -451,7 +452,6 @@ int main(int argc, char *argv[]) {
                     // traverse to the left
                     rover = rover->left_child;
                 }
-                printf("%d ", lengthStepper);
 
 
                 lengthStepper--;
