@@ -38,6 +38,7 @@ Code *character_codes;
 Node **priority_queue;
 Node *root_node;
 
+
 void generate_codes(Node* current_node, char code[], int position);
 Node* create_node(unsigned char character, unsigned int frequency, Node* left, Node* right);
 void insert_node(Tree* tree, Node* node);
@@ -54,6 +55,7 @@ void printBinary(unsigned char byte) {
     }
 }
 
+
 void swap_nodes(Node **a, Node **b)
 {
     Node *tmp = *a;
@@ -65,14 +67,15 @@ void heapify(Tree* tree, int index) {
     int smallest = index;
     int left = left_child(index);
     int right = right_child(index);
-    smallest = (left < tree->size && tree->nodes[left]->frequency < tree->nodes[smallest]->frequency) ? left : index;
-    smallest = (right < tree->size && tree->nodes[right]->frequency < tree->nodes[smallest]->frequency) ? right : index;
+    if(left < tree->size && tree->nodes[left]->frequency < tree->nodes[smallest]->frequency)
+        smallest = left;
+    else if(right < tree->size && tree->nodes[right]->frequency < tree->nodes[smallest]->frequency)
+        smallest = right;
     if (index != smallest) {
         swap_nodes(&tree->nodes[smallest], &tree->nodes[index]);
         heapify(tree, smallest);
     }
 }
-
 
 void makeMinHeap(Tree* tree) {
     int i, n = tree->size;
