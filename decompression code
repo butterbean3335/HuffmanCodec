@@ -1,6 +1,6 @@
 // PASTE THIS INTO THE DECOMPRESSION SECTION OF THE ACTUAL FILE
 
- else {
+ else{
         // decompression
         character_frequencies = (unsigned int*)calloc(sizeof(unsigned int), MAX);
         unsigned int freq;
@@ -10,7 +10,7 @@
         // first 256 unsigned ints worth of data in the file is the character frequencies
         for (unsigned char c=0; c<256; c++) {
             fread(&freq, sizeof(unsigned int), 1, inputFile);
-            character_frequencies[n] = freq;
+            character_frequencies[c] = freq;
 
             // fill the priority queue with all characters included in the compressed file
             if (freq != 0) {
@@ -80,11 +80,53 @@
             }
         }
 
-        
-
-
-
         // the next byte of data begins the codes
+        unsigned char readIn;
+        unsigned char buffer;
+        bool bit;
+        int codeLength = 1;
+        int lengthStepper = 7;
+        int bufferLength = 0;
+        Node *rover = root_node;
+
+        while (fread(&readIn, sizeof(unsigned char), 1, inputFile) > 0) {
+            while (lengthStepper >= 0) {
+                // probably need to check if we're in the middle of a code that spans bytes
+
+                // if not finished with current byte keep checking bits in byte
+                buffer = readIn >> lengthStepper;
+
+                // check if the bit at position lengthStepper is 0 or 1
+                if (buffer & 0b00000001 == 0b00000001) {
+                    bit = 1;
+                } else {
+                    bit = 0;
+                }
+
+                if (bit == 1) {
+                    // traverse to the right
+                    rover = rover->right_child;
+
+                } else if (bit == 0) {
+                    // traverse to the left
+                    rover = rover->left_child;
+                }
+
+                // check if rover has any children
+                if (rover->right_child == NULL && rover->left_child == NULL) {
+                    // rover does not have any children, this is the character we want to print
+                    fwrite(rover->character, sizeof(unsigned char), 1, outputFile);
+
+                    // reset rover
+                    rover = root_node;
+        
+                } else {
+                    // rover has children, still more bits in code
+                }
+
+            }
+        }
+        
 
 
 
