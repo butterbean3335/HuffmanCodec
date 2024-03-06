@@ -65,13 +65,14 @@ void heapify(Tree* tree, int index) {
     int smallest = index;
     int left = left_child(index);
     int right = right_child(index);
-    smallest = (left < tree->size && tree->nodes[left]->frequency < tree->nodes[smallest]->frequency) ? left : smallest;
-    smallest = (right < tree->size && tree->nodes[right]->frequency < tree->nodes[smallest]->frequency) ? right : smallest;
+    smallest = (left < tree->size && tree->nodes[left]->frequency < tree->nodes[smallest]->frequency) ? left : index;
+    smallest = (right < tree->size && tree->nodes[right]->frequency < tree->nodes[smallest]->frequency) ? right : index;
     if (index != smallest) {
         swap_nodes(&tree->nodes[smallest], &tree->nodes[index]);
         heapify(tree, smallest);
     }
 }
+
 
 void makeMinHeap(Tree* tree) {
     int i, n = tree->size;
@@ -80,9 +81,9 @@ void makeMinHeap(Tree* tree) {
 }
 
 Node* remove_min_node(Tree *tree) {
-    tree->size--;
     Node *tmp = tree->nodes[0];
     tree->nodes[0] = tree->nodes[tree->size - 1];
+    tree->size--;
     heapify(tree, 0);
     return tmp;
 }
@@ -228,6 +229,7 @@ int main(int argc, char *argv[]) {
         
         tree->size = num_c;
 
+
         //      ->convert tree to minHeap, lowest values are to be removed and added together, and put into a node
         makeMinHeap(tree);
 
@@ -262,7 +264,7 @@ int main(int argc, char *argv[]) {
         
         //seg fault is occuring right here
         generate_codes(root_node, generatedCode, position);         //-> has put codes into character_codes.info
-        
+
         //now need to write codes
         // we have character_codes which is storing the info, being the code, and the bits for each code, or the length
         unsigned char readInBuffer;
@@ -270,11 +272,17 @@ int main(int argc, char *argv[]) {
         int codeLength = 0;
         int bufferLength = 0;
         int lengthStepper = 0;
+        // Print character codes
+        for (int i = 0; i < MAX; i++) {
+            if (character_codes[i].bits > 0) {
+                printf("Character: %c, Code: %s\n", i, character_codes[i].information);
+            }
+        }
+
         while(fread(&C, sizeof(unsigned char), 1, inputFile) > 0){
             //first step is to get the code to reference
             strcpy(generatedCode, character_codes[C].information);
             codeLength = character_codes[C].bits;
-
             //number of bits is equal to length of coded msg
             while(bufferLength < 8){
                 //8 bits for an ascii character
@@ -296,7 +304,6 @@ int main(int argc, char *argv[]) {
                 if(bufferLength >=8){
                     //buffer is full, shouldnt encounter greater than case, but includes all values of bufferLength now
                     fwrite(&readInBuffer, sizeof(unsigned char), 1, outputFile);
-                    printf("Read in Buffer at this point %u \n", readInBuffer);
                     readInBuffer = 0x00;       //clear the buffer, done reading 
                     bufferLength = 0;           //set bufferLength to 0
                 }
@@ -307,7 +314,6 @@ int main(int argc, char *argv[]) {
             //need to shift buffer over however many bits are left over
             readInBuffer = readInBuffer << (8-bufferLength);    
             fwrite(&readInBuffer, sizeof(unsigned char), 1, outputFile);
-            printf("Read in Buffer at this point %d \n", readInBuffer);
         }
     }
     else{
