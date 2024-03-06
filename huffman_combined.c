@@ -357,11 +357,12 @@ int main(int argc, char *argv[]) {
                 }
                 
                 // check if this character has a greater ASCII value than the next
-                else if (priority_queue[m]->character > priority_queue[m+1]->character) {
-                    // swap these two nodes in the priority queue
-                    tmp = priority_queue[m];
-                    priority_queue[m] = priority_queue[m+1];
-                    priority_queue[m+1] = tmp;
+                else if (character_frequencies[priority_queue[m]->character] == character_frequencies[priority_queue[m+1]->character])
+                    if(priority_queue[m]->character > priority_queue[m+1]->character) {
+                        // swap these two nodes in the priority queue
+                        tmp = priority_queue[m];
+                        priority_queue[m] = priority_queue[m+1];
+                        priority_queue[m+1] = tmp;
                 }
             }
         }
@@ -424,6 +425,17 @@ int main(int argc, char *argv[]) {
                 // if not finished with current byte keep checking bits in byte
                 buffer = readIn >> lengthStepper;
 
+                // check if rover has any children, if it does, still more bits in code
+                if (rover->right_child == NULL && rover->left_child == NULL) {
+                        // rover does not have any children, this is the character we want to print
+                        printf("!");
+                        printf("printing char %c\n", rover->character);
+                        fwrite(&(rover->character), sizeof(unsigned char), 1, outputFile);
+
+                        // reset rover
+                        rover = root_node;
+        
+                }
                 // check if the bit at position lengthStepper is 0 or 1
                 if (buffer & 0b00000001 == 0b00000001) {
                     bit = 1;
@@ -441,16 +453,7 @@ int main(int argc, char *argv[]) {
                 }
                 printf("%d ", lengthStepper);
 
-                // check if rover has any children, if it does, still more bits in code
-                if (rover->right_child == NULL && rover->left_child == NULL) {
-                    // rover does not have any children, this is the character we want to print
-                    printf("!");
-                    fwrite(&(rover->character), sizeof(unsigned char), 1, outputFile);
 
-                    // reset rover
-                    rover = root_node;
-        
-                }
                 lengthStepper--;
 
             }
