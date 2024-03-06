@@ -390,18 +390,21 @@ int main(int argc, char *argv[]) {
         Node *sumNode;
         int sumFrequency = 0;
 
-        while(tree->size > 0)  { 
+        while(tree->size > 1)  { 
             lowest = remove_min_node(tree); // remove lowest item in the tree
             secondLowest = remove_min_node(tree);   // remove second lowest item in the tree
             sumFrequency = lowest->frequency + secondLowest->frequency;
             sumNode = create_node(0, sumFrequency, lowest, secondLowest);
+            insert_node(tree, sumNode);
 
-            // if only one more node in the tree, that node is the root_node
-            if(tree->size == 1){
-                root_node = remove_min_node(tree);
-            }
             printf(".");
         }
+
+        // if only one more node in the tree, that node is the root_node
+        if (tree->size == 1) {
+            root_node = remove_min_node(tree);
+        }
+
 
         // the next byte of data begins the codes
         unsigned char readIn;
@@ -410,6 +413,10 @@ int main(int argc, char *argv[]) {
         int lengthStepper = 7;
         int bufferLength = 0;
         Node *rover = root_node;
+        if (rover == NULL) {
+            printf("NULL rover\n");
+            exit(1);
+        }
 
         while (fread(&readIn, sizeof(unsigned char), 1, inputFile) > 0) {
             while (lengthStepper >= 0) {
