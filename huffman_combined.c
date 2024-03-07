@@ -321,9 +321,9 @@ int main(int argc, char *argv[]) {
     }
     else{
         // decompression
-        character_frequencies = (unsigned int*)calloc(sizeof(unsigned int), MAX);
+        //character_frequencies = (unsigned int*)calloc(sizeof(unsigned int), MAX);
         unsigned int freq;
-        priority_queue = (Node**)calloc(sizeof(Node*), MAX);
+        //priority_queue = (Node**)calloc(sizeof(Node*), MAX);
         int num_c = 0;
         int result;
 
